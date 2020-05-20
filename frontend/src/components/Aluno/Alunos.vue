@@ -1,7 +1,13 @@
 <template>
   <div>
-    <titulo texto="Aluno" />
-    <div>
+    <titulo
+      :texto="
+        professor_id != undefined
+          ? 'Professor: ' + professor.nome
+          : 'Todos os Alunos'
+      "
+    />
+    <div v-if="professor_id != undefined">
       <input
         type="text"
         placeholder="Nome do Aluno"
@@ -20,9 +26,14 @@
       </thead>
       <tbody v-if="alunos.length">
         <tr v-for="(aluno, index) in alunos" :key="index">
-          <td>{{ aluno.id }}</td>
-          <td>{{ aluno.nome }}</td>
-          <td>
+          <td class="colPequeno">{{ aluno.id }}</td>
+          <router-link
+            :to="`/alunoDetalhe/${aluno.id}`"
+            tag="td"
+            style="cursor: pointer"
+          ></router-link>
+          <td>{{ aluno.nome }} {{aluno.sobrenome}}</td>
+          <td class="colPequeno">
             <button class="btn btn_red" @click="remover(aluno)">Remover</button>
           </td>
         </tr>
@@ -44,6 +55,8 @@ export default {
   data() {
     return {
       titulo: "Aluno",
+      professor_id: this.$route.params.prof_id,
+      professor: {},
       nome: "",
       alunos: [],
     };
@@ -54,10 +67,20 @@ export default {
        consequentemente possui é uma STRING e deve ser convertida para JSON. Logo,
        este novo resultado já convertido é atribuído para a variável alunos, que por
        sua vez é passado para outro objeto no último "this"*/
-    this.$http
-      .get("http://localhost:5000/api")
-      .then((ret) => ret.json())
-      .then((alunos) => (this.alunos = alunos));
+    if (this.professor_id) {
+      carregarProfessores();
+      this.$http
+        .get(
+          "http://localhost:5000/api/alunos?professor.id=" + this.professor_id
+        )
+        .then((ret) => ret.json())
+        .then((alunos) => (this.alunos = alunos));
+    } else {
+      this.$http
+        .get("http://localhost:5000/api/alunos")
+        .then((ret) => ret.json())
+        .then((alunos) => (this.alunos = alunos));
+    }
   },
 
   props: {},
@@ -66,6 +89,10 @@ export default {
       let _aluno = {
         nome: this.nome,
         sobrenome: "",
+        professor: {
+          id: this.professor.id,
+          nome: this.professor.nome,
+        },
       };
 
       this.$http
@@ -82,6 +109,14 @@ export default {
         this.alunos.splice(index);
       });
     },
+    carregarProfessores() {
+      this.$http
+        .get("http://localhost:5000/api/professores/" + this.professor_id)
+        .then((res) => res.json())
+        .then((professor) => {
+          this.professor = professor;
+        });
+    },
   },
 };
 </script>
@@ -89,7 +124,7 @@ export default {
 <style scoped>
 input {
   /*Calculo realizado para que o botão fique na frente do Input, caso o "display: inline não for utilizado"*/
-  /* width: calc(100%-150px); */
+  width: calc(100%-195px);
   border: 0;
   padding: 20px;
   font-size: 1.3em;
@@ -98,6 +133,7 @@ input {
 }
 
 .btn_add {
+  width: 150px;
   border: 0;
   padding: 20px;
   font-size: 1.3em;

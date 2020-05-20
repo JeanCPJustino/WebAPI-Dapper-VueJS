@@ -1,16 +1,26 @@
 <template>
   <div id="app">
-    <Alunos />
+    <Nav></Nav>
+    <div class="margemPrincipal"> </div>
+    <!-- Comando utilizado para que o router analise todas as rotas disponíveis 
+         e assim, possa navegar entre as páginas (rotas)  -->    
+    <router-view :key="$route.fullPath"></router-view>
   </div>
 </template>
 
 <script>
-import Alunos from "./components/Aluno/Alunos.vue";
+import Alunos from "./components/Aluno/Alunos";
+import Professor from "./components/Professor/Professor";
+import Sobre from "./components/Sobre/Sobre";
+import Nav from "./components/_nav/Nav";
 
 export default {
   name: "App",
   components: {
     Alunos,
+    Professor,
+    Sobre,
+    Nav
   },
 };
 </script>
@@ -30,10 +40,17 @@ html {
   height: 100%;
 }
 
+.margemPrincipal{
+  width: 50%;
+  margin: auto;
+}
+
 #app {
+  width: 100%;
 }
 
 .btn_red {
+  font-size: 0.8em !important;
   background-color: rgb(236, 51, 88);
 }
 
@@ -42,6 +59,7 @@ html {
   cursor: pointer;
   border: 1px solid #000;
   color: white;
+  font-size: 1.2em;
   font-weight: bold;
   /* Para as bordas do botão ficarem arredondadas */
   border-radius: 5px;
@@ -80,5 +98,8 @@ table tr td {
 
 .colPequeno {
   width: 5%;
+  text-align: right;
+  background-color: rgb(125, 217, 245);
+  font-weight: bold;  
 }
 </style>
