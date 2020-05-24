@@ -1,6 +1,6 @@
 <template>
   <div>
-    <titulo texto="Professores" />
+    <titulo texto="Professores" :btn_voltar="true"/>
     <table>
       <thead>
         <th>Cód.</th>
@@ -9,27 +9,23 @@
       </thead>
       <tbody v-if="Professores.length">
         <tr v-for="(professor, index) in Professores" :key="index">
-          <td class="colPequeno">{{ professor.id }}</td>
+          <td class="colPequeno">{{professor.id_professor}}</td>
 
           <router-link
-            :to="`/alunos/${professor.id}`"
+            :to="`/alunos/${professor.id_professor}`"
             tag="td"
             style="cursor: pointer"
-          ></router-link>
-          {{
-            professor.nome
-          }}
-          {{
-            professor.sobrenome
-          }}
+          >{{professor.nome}} {{professor.sobrenome}}</router-link>
 
-          <td class="colPequeno">
-            {{ professor.qtdAlunos }}
-          </td>
+          <td class="colPequeno">{{professor.qtdAlunos}}</td>
         </tr>
       </tbody>
       <tfoot v-else>
-        Nenhum professor cadastrado
+        <tr>
+          <td colspan="3" style="text-align: center">
+            <h5>Nenhum Professor Encontrado</h5>
+          </td>
+        </tr>
       </tfoot>
     </table>
   </div>
@@ -64,18 +60,18 @@ export default {
 
   props: {},
   methods: {
-    alunosPorProfessor() {
-      this.Professores.array.forEach((professor, index) => {
-        professor = {
-          id: professor.id,
-          nome: professor.nome,
-          qtdAlunos: this.Alunos.filter(
-            (aluno) => aluno.professor.id == professor.id
-          ).length,
-        };
-        this.Professores[index] = professor;
-      });
-    },
+    // alunosPorProfessor() {
+    //   this.Professores.array.forEach((professor, index) => {
+    //     professor = {
+    //       id_professor: professor.id_professor,
+    //       nome: professor.nome,
+    //       qtdAlunos: this.Alunos.filter(
+    //         (aluno) => aluno.professor.id_professor == professor.id_professor
+    //       ).length,
+    //     };
+    //     this.Professores[index] = professor;
+    //   });
+    // },
 
     carregarProfessores() {
       this.$http
@@ -83,7 +79,7 @@ export default {
         .then((res) => res.json())
         .then((professor) => {
           this.Professores = professor;
-          this.alunosPorProfessor();
+          // this.alunosPorProfessor();
         });
     },
   },

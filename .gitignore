@@ -20,3 +20,7 @@ yarn-error.log*
 *.sln
 *.sw?
 node_modules
+
+# Arquivos dotnet core e ef core
+bin
+obj

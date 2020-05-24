@@ -1,62 +1,55 @@
 <template>
-  <div>
-    <titulo :texto="`Aluno: :${aluno.nome}`" :btnVoltar="modo_edicao">
-      <button
-        v-show="!modo_edicao"
-        class="btn btn_editar"
-        @click="editarAluno()"
-      >
-        Editar
-      </button>
+  <div v-if="!loading">
+    <titulo :texto="`Aluno: ${aluno.nome}`" :btn_voltar="!visualizando" >
+      <button v-show="visualizando" class="btn btn_editar" @click="editarAluno()">Editar</button>
     </titulo>
     <table>
       <tbody>
         <tr>
           <td class="colPequeno">Matrícula:</td>
           <td>
-            <label>{{ aluno.id }}</label>
+            <label>{{aluno.id_aluno}}</label>
           </td>
         </tr>
         <tr>
           <td class="colPequeno">Nome:</td>
           <td>
-            <label v-if="!modo_edicao">{{ aluno.nome }}</label>
-            <input v-else v-model="aluno.nome" type="text" />
+            <label v-if="visualizando">{{aluno.nome}}</label>
+            <input v-else v-model="aluno.nome" type="text">
           </td>
         </tr>
         <tr>
           <td class="colPequeno">Sobrenome:</td>
           <td>
-            <label v-if="!modo_edicao">{{ aluno.sobrenome }}</label>
-            <input v-else v-model="aluno.sobrenome" type="text" />
+            <label v-if="visualizando">{{aluno.sobrenome}}</label>
+            <input v-else v-model="aluno.sobrenome" type="text">
           </td>
         </tr>
         <tr>
           <td class="colPequeno">Data Nascimento:</td>
           <td>
-            <label v-if="!modo_edicao">{{ aluno.dataNascimento }}</label>
-            <input v-else v-model="aluno.dataNascimento" type="text" />
+            <label v-if="visualizando">{{aluno.dataNascimento}}</label>
+            <input v-else v-model="aluno.dataNascimento" type="text">
           </td>
         </tr>
         <tr>
           <td class="colPequeno">Professor:</td>
           <td>
-            <label v-if="!modo_edicao">{{ aluno.professor.nome }}</label>
-            <select v-else v-model="aluno.professor">
+            <label v-if="visualizando">{{aluno.professor.nome}}</label>
+            <select v-else v-model="aluno.professor.id_professor">
               <option
                 v-for="(professor, index) in professores"
                 :key="index"
-                v-bind:value="professor"
-              >
-                {{ professor.nome }}
-              </option>
+                v-bind:value="professor.id_professor"
+              >{{professor.nome}}</option>
             </select>
           </td>
         </tr>
       </tbody>
     </table>
+
     <div style="margin-top: 10px">
-      <div v-if="modo_edicao">
+      <div v-if="!visualizando">
         <button class="btn btn_salvar" @click="salvar()">Salvar</button>
         <button class="btn btn_cancelar" @click="cancelar()">Cancelar</button>
       </div>
@@ -68,48 +61,67 @@
 import Titulo from "../_share/Titulo";
 
 export default {
-  component: {
+  components: {
     Titulo,
   },
   data() {
     return {
-      aluno: {},
       professores: [],
+      aluno: {},      
       idAluno: this.$route.params.id,
-      modo_edicao: false,
+      visualizando: true,
+      loading: true,
     };
   },
   created() {
-    this.$http
-      .get("http://localhost:5000/api/alunos/" + this.idAluno)
-      .then((ret) => ret.json())
-      .then((aluno) => (this.aluno = aluno));
-
-    this.$http
-      .get("http://localhost:5000/api/professores")
-      .then((res) => res.json())
-      .then((professor) => (this.professores = professor));
+    this.carregarProfessor();
   },
   methods: {
     editarAluno() {
-      this.modo_edicao = !this.modo_edicao;
+      this.visualizando = !this.visualizando;
     },
     salvar() {
-        let _alunoEditado = {
-            id: this.aluno.id,
-            nome: this.aluno.nome,
-            sobrenome: this.aluno.sobrenome,
-            dataNascimento: this.aluno.dataNascimento,
-            professor:  this.aluno.professor
-        },
+      let _alunoEditado = {
+        id_aluno: this.aluno.id_aluno,
+        nome: this.aluno.nome,
+        sobrenome: this.aluno.sobrenome,
+        dataNascimento: this.aluno.dataNascimento,
+        id_professor: this.aluno.professor.id_professor,
+        Professor: {
+           id_professor: this.aluno.professor.id_professor,
+           nome: this.aluno.professor.nome,
+        }         
+      };
 
-        this.$http.put(`http://localhost:5000/api/alunos/${this.aluno.id}`, this.aluno);
-        this.modo_edicao = !this.modo_edicao;
+      this.$http
+        .put(`http://localhost:5000/api/alunos/${_alunoEditado.id_aluno}`, _alunoEditado)
+        .then((res) => res.json())
+        .then(aluno => (this.aluno = aluno))
+        .then(() => this.visualizando = true);
 
+      this.visualizando = !this.visualizando;
     },
     cancelar() {
-      this.modo_edicao = !this.modo_edicao;
-    }
+      this.visualizando = !this.visualizando;
+    },
+    carregarProfessor() {
+      this.$http
+        .get("http://localhost:5000/api/professores")
+        .then((res) => res.json())
+        .then((professor) => {
+          this.professores = professor;
+          this.carregarAluno();
+        });
+    },
+    carregarAluno() {
+      this.$http
+        .get(`http://localhost:5000/api/alunos/${this.idAluno}`)
+        .then((ret) => ret.json())
+        .then((aluno) => {
+          this.aluno = aluno;
+          this.loading = false;
+        });
+    },
   },
 };
 </script>

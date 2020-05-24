@@ -1,23 +1,12 @@
 <template>
   <div>
-    <titulo
-      :texto="
-        professor_id != undefined
-          ? 'Professor: ' + professor.nome
-          : 'Todos os Alunos'
-      "
+    <titulo :texto="id_professor != undefined ? 'Professor: ' + professor.nome : 'Todos os Alunos'" :btn_voltar="true"
     />
-    <div v-if="professor_id != undefined">
-      <input
-        type="text"
-        placeholder="Nome do Aluno"
-        v-model="nome"
-        @keyup.enter="addAluno()"
-      />
+    <div v-if="id_professor != undefined">
+      <input type="text" placeholder="Nome do Aluno" v-model="nome" @keyup.enter="addAluno()">
       <button class="btn btn_add" @click="addAluno()">Adicionar</button>
     </div>
-    <br />
-    <br />
+
     <table>
       <thead>
         <th>Mat.</th>
@@ -26,20 +15,21 @@
       </thead>
       <tbody v-if="alunos.length">
         <tr v-for="(aluno, index) in alunos" :key="index">
-          <td class="colPequeno">{{ aluno.id }}</td>
-          <router-link
-            :to="`/alunoDetalhe/${aluno.id}`"
-            tag="td"
-            style="cursor: pointer"
-          ></router-link>
-          <td>{{ aluno.nome }} {{aluno.sobrenome}}</td>
+          <td class="colPequeno">{{aluno.id_aluno}}</td>
+          <router-link :to="`/alunosDetalhe/${aluno.id_aluno}`" tag="td" style="cursor: pointer">
+            {{aluno.nome}} {{aluno.sobrenome}}
+          </router-link>
           <td class="colPequeno">
-            <button class="btn btn_red" @click="remover(aluno)">Remover</button>
+            <Button class="btn btn_red" @click="remover(aluno)">Remover</Button>
           </td>
         </tr>
       </tbody>
       <tfoot v-else>
-        Nenhum aluno cadastrado
+         <tr>
+          <td colspan="3" style="text-align: center">
+            <h5>Nenhum Aluno Encontrado</h5>
+          </td>
+        </tr>
       </tfoot>
     </table>
   </div>
@@ -55,7 +45,7 @@ export default {
   data() {
     return {
       titulo: "Aluno",
-      professor_id: this.$route.params.prof_id,
+      id_professor: this.$route.params.prof_id,
       professor: {},
       nome: "",
       alunos: [],
@@ -67,18 +57,16 @@ export default {
        consequentemente possui é uma STRING e deve ser convertida para JSON. Logo,
        este novo resultado já convertido é atribuído para a variável alunos, que por
        sua vez é passado para outro objeto no último "this"*/
-    if (this.professor_id) {
-      carregarProfessores();
+    if (this.id_professor) {
+      this.carregarProfessores();
       this.$http
-        .get(
-          "http://localhost:5000/api/alunos?professor.id=" + this.professor_id
-        )
-        .then((ret) => ret.json())
+        .get(`http://localhost:5000/api/alunos/byprofessor/${this.id_professor}`)
+        .then((res) => res.json())
         .then((alunos) => (this.alunos = alunos));
     } else {
       this.$http
         .get("http://localhost:5000/api/alunos")
-        .then((ret) => ret.json())
+        .then((res) => res.json())
         .then((alunos) => (this.alunos = alunos));
     }
   },
@@ -87,31 +75,34 @@ export default {
   methods: {
     addAluno() {
       let _aluno = {
+        id_aluno: 0,
         nome: this.nome,
         sobrenome: "",
+        dataNascimento: "01/01/2000",
+        id_professor: this.professor.id_professor,
         professor: {
-          id: this.professor.id,
-          nome: this.professor.nome,
-        },
+           id_professor: this.professor.id_professor,
+           nome: this.professor.nome,
+        } 
       };
 
       this.$http
-        .post("http://localhost:5000/api", _aluno)
-        .then((ret) => ret.json())
-        .then((alunoinserido) => {
-          this.alunos.push(alunoinserido);
+        .post("http://localhost:5000/api/alunos/", _aluno)
+        .then((res) => res.json())
+        .then((aluno) => {
+          this.alunos.push(aluno);
           this.nome = "";
         });
     },
     remover(aluno) {
-      this.$http.delete(`http://localhost:5000/api/${aluno.id}`).then(() => {
-        let index = this.alunos.indexOf(aluno);
-        this.alunos.splice(index);
+      this.$http.delete(`http://localhost:5000/api/alunos/${aluno.id_aluno}`).then(() => {
+        let indice = this.alunos.indexOf(aluno);
+        this.alunos.splice(indice, 1);
       });
     },
     carregarProfessores() {
       this.$http
-        .get("http://localhost:5000/api/professores/" + this.professor_id)
+        .get(`http://localhost:5000/api/professores/${this.id_professor}`)
         .then((res) => res.json())
         .then((professor) => {
           this.professor = professor;
